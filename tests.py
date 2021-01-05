@@ -1,6 +1,6 @@
 import ModeloVectorial
 import TextNormalizer
-import UsualTools
+import Utils
 import os
 from ModeloVectorial import *
 from TextNormalizer import *
@@ -16,40 +16,40 @@ books = UsualTools.loadObject("./Recursos/BooksList.json")
 exp.setVocabulary(UsualTools.loadObject("./Recursos/vocabulary.json"))
 #----------------------------------------------------- Lemmatiza los libros y los guarda -------------------------------------------
 
-#for book in books:
-#	if (not (str(book.num)+".json" in os.listdir("./Recursos/lemmas/")) ):
-#		print("-----------------")
-#		print("Titulo:",book.nombre)
-#		book.texto = exp.delExtraInfoPG("./Libros de Goodreads/"+str(book.num)+".txt")
-#		book.texto = exp.deleteSpecialChars(book.texto)
-#		booktam = len(book.texto)
-#		lemmas = []
-#		if (len(book.texto) < maxLen):#1000000 es el numero maximo de caracteres soportada por cada procesamiento
-#			exp.setText(book.texto)
-#			lemmas= exp.lemmatize_delSW()
-#		else:#Si excede el numero de caracteres se divide en bloques y luego se guntan los lemmas
-#			print("Libro grande")
-#			i1 = 0
-#			i2 = 0
-#
-#			prop = booktam // (maxLen -2)  # Cantidad de porciones de texto de tamano maximo
-#			porc = int((maxLen -2)  * (booktam / (maxLen -2)  - booktam // (maxLen -2) )) #sobrante de las porciones a procesar
-#			print(porc,"/")
-#			for i in range(prop):
-#				i2 = i2+(maxLen -2 )
-#				exp.setText(book.texto[i1:i2])
-#				lemmas= lemmas + exp.lemmatize_delSW()
-#				i1 = i2
-#			if(porc > 2):
-#				i2 = i2 + porc -1
-#				exp.setText(book.texto[i1:i2])
-#				lemmas= lemmas + exp.lemmatize_delSW()
-#		nle = len(lemmas)
-#		llemmas.append(lemmas)
-#		print("Los lemmas son	 " + str(nle))
-#		print("vocabulario es " + str(len(exp.vocabulary)))
-#		UsualTools.saveObject(lemmas,f"./Recursos/lemmas/{book.num}.json")
-#		UsualTools.saveObject(exp.vocabulary,"./Recursos/vocabulary.json")
+for book in books:
+	if (not (str(book.num)+".json" in os.listdir("./Recursos/lemmas/")) ):
+		print("-----------------")
+		print("Titulo:",book.nombre)
+		book.texto = exp.delExtraInfoPG("./Libros de Goodreads/"+str(book.num)+".txt")
+		book.texto = exp.deleteSpecialChars(book.texto)
+		booktam = len(book.texto)
+		lemmas = []
+		if (len(book.texto) < maxLen):#1000000 es el numero maximo de caracteres soportada por cada procesamiento
+			exp.setText(book.texto)
+			lemmas= exp.lemmatize_delSW()
+		else:#Si excede el numero de caracteres se divide en bloques y luego se guntan los lemmas
+			print("Libro grande")
+			i1 = 0
+			i2 = 0
+
+			prop = booktam // (maxLen -2)  # Cantidad de porciones de texto de tamano maximo
+			porc = int((maxLen -2)  * (booktam / (maxLen -2)  - booktam // (maxLen -2) )) #sobrante de las porciones a procesar
+			print(porc,"/")
+			for i in range(prop):
+				i2 = i2+(maxLen -2 )
+				exp.setText(book.texto[i1:i2])
+				lemmas= lemmas + exp.lemmatize_delSW()
+				i1 = i2
+			if(porc > 2):
+				i2 = i2 + porc -1
+				exp.setText(book.texto[i1:i2])
+				lemmas= lemmas + exp.lemmatize_delSW()
+		nle = len(lemmas)
+		llemmas.append(lemmas)
+		print("Los lemmas son	 " + str(nle))
+		print("vocabulario es " + str(len(exp.vocabulary)))
+		UsualTools.saveObject(lemmas,f"./Recursos/lemmas/{book.num}.json")
+		UsualTools.saveObject(exp.vocabulary,"./Recursos/vocabulary.json")
 #--------------------------------------------------------------------------------------------------------------------------------
 
 #for l in os.listdir("./Recursos/lemmas/") :
@@ -74,4 +74,6 @@ exp.setVocabulary(UsualTools.loadObject("./Recursos/vocabulary.json"))
 #cont = 0
 
 #print(len(llemmas[0]))
-	
+vcc = UsualTools.loadObject("./Recursos/vocabulary.json")
+
+print("vocabulario es " + str(len(vcc)))
