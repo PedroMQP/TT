@@ -30,15 +30,23 @@ class Modelo:
 	def entrenar(self):
 		self.model.fit(self.trainData, self.trainLabels)
 
-	def precision(self):
-		cm = sklearn.metrics.confusion_matrix(self.testLabels,self.testResults,labels=[0,1,2])
+	def metricas(self):
+		cm = sklearn.metrics.confusion_matrix(self.testLabels,self.testResults,labels=[1,2,3])
 		print("Reales/Preds  Malos   Regulares  Excelentes")
 		print("Malos         ",cm[0][0],"      ",cm[0][1],"       ",cm[0][2],"   ")
 		print("Regualres     ",cm[1][0],"     ",cm[1][1],"       ",cm[1][2],"   ")
 		print("Excelentes    ",cm[2][0],"     ",cm[2][1],"       ",cm[2][2],"   ")
-		print("-----------------------------------------------------")
 		precision = sklearn.metrics.precision_score(self.testLabels,self.testResults,average = None)
-		return precision
+		recall = sklearn.metrics.recall_score(self.testLabels,self.testResults,average = None)
+		accuaracy = sklearn.metrics.accuracy_score(self.testLabels,self.testResults)
+
+		specifity = [
+					(cm[1][1]+cm[2][2])/(cm[1][1]+cm[2][2] +cm[0][1]+cm[0][2] ),
+					(cm[0][0]+cm[2][2])/(cm[0][0]+cm[2][2] +cm[1][0]+cm[1][2] ),
+					(cm[1][1]+cm[0][0])/(cm[1][1]+cm[0][0] +cm[2][0]+cm[2][1] )
+	     			 ]
+		f1 = sklearn.metrics.f1_score(self.testLabels,self.testResults,average = None)
+		return [precision,recall,accuaracy,specifity,f1]
 	
 	def probar(self):
 		pass

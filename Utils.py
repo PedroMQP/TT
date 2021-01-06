@@ -64,9 +64,9 @@ class Utils:
 							nuevoLibro = Libro(lib[0], lib[1], x,i)
 							lst.append(nuevoLibro) 
 		return lst
-	def delExtraInfoPG(self,fname):#Elimina información extra de los libros del Projecto Gutenberg
+	def delExtraInfoPG(fname):#Elimina información extra de los libros del Projecto Gutenberg
 		cad = ["*** END","***END"]# Cadenas que indica que el libro termino
-		txtL = UsualTools.getTextLines(fname)
+		txtL = Utils.getTextLines(fname)
 		txt= " "
 		nl = len(txtL)
 		ctxt = " "

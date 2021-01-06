@@ -50,7 +50,6 @@ class Preprocesamiento:
 		lemmas = []
 		for tok in self.tokens:
 			if (not(tok.text in self.stopwords) or not(tok.lemma_ in self.stopwords)  ):
-				lemmas.append(tok.lemma_)
+					lemmas.append(tok.lemma_)
+					#print(lemmas[-1],len(lemmas[-1]))
 		return lemmas
-	
-				

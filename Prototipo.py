@@ -22,12 +22,21 @@ class Prototipo:
 		self.libros = []
 		self.prepro = Preprocesamiento()
 		self.vectores = ModeloVectorial()
-		self.prediccionesKNN = []
-	
+	def separarConjuntos(self):#separa los ids en sus categoria  
+		m = []
+		r = []
+		b = []
+		for lib in self.libros:
+			if(lib.estrellas == 1):
+				m.append(lib.num)
+			elif(lib.estrellas == 2):
+				r.append(lib.num)
+			elif(lib.estrellas == 3):
+				b.append(lib.num)
+		return [m,r,b]
+
+
 	def procesarTextos(self):
-		vocabulary = set()
-		if ("vocabulary.json" in os.listdir("./Recursos/")):
-			vocabulary = Utils.loadObject("./Recursos/vocabulary.json")
 		maxLen = 999999# Maxima mongitud de caracteres soportados por libro
 		for lib in self.libros:
 			lemmas = []
@@ -55,31 +64,55 @@ class Prototipo:
 
 				Utils.saveObject(lemmas,"./Recursos/lemmas/"+str(lib.num)+".json")
 				
-				vocabulary = vocabulary | set(lemmas) 
-		Utils.saveObject(vocabulary,"./Recursos/vocabulary.json")
-
 	def generarVectores(self):
-		vocabulary = Utils.loadObject("./Recursos/vocabulary.json") 
+		m,r,e = self.separarConjuntos()
+		vocabulary = set()
+		for i in range(25):
+			lemmas = Utils.loadObject("./Recursos/lemmas/"+str(m[i])+".json")
+			vocabulary = vocabulary | set(lemmas)
+			lemmas = Utils.loadObject("./Recursos/lemmas/"+str(r[i])+".json")
+			vocabulary = vocabulary | set(lemmas)
+			lemmas = Utils.loadObject("./Recursos/lemmas/"+str(e[i])+".json")
+			vocabulary = vocabulary | set(lemmas)
+		print("Vocabulario de tamaño",len(vocabulary))
 		self.vectores.setVocabulary(vocabulary)
-		for lib in self.libros:
-			print("nuevo libro")
-			lemmas = Utils.loadObject("./Recursos/lemmas/"+str(lib.num)+".json")
-			self.vectores.addVector(lemmas,lib.estrellas )
+		Utils.saveObject(vocabulary,"./Recursos/vocabulary.json") 
+		for i in range(25):
+			lemmas = Utils.loadObject("./Recursos/lemmas/"+str(m[i])+".json")
+			self.vectores.addVector(lemmas,1)
+			lemmas = Utils.loadObject("./Recursos/lemmas/"+str(r[i])+".json")
+			self.vectores.addVector(lemmas,2)
+			lemmas = Utils.loadObject("./Recursos/lemmas/"+str(e[i])+".json")
+			self.vectores.addVector(lemmas,3)
 		self.vectores.setTFIDF()
 		Utils.saveObject(self.vectores,"./Recursos/ModeloVectorial.json")
 
 	def seleccionarModelos(self):
+		self.vectores =  Utils.loadObject("./Recursos/ModeloVectorial.json")
+		
+		X_train = self.vectores.vectors
+		y_train = []
+		for v in range(len(X_train)):
+			y_train.append(self.vectores.etiquetas[v])
+
+		
 		
 		#Configuración de los parametros de los modelos 
 		  #          weigths    kn   alg 
-		knnConf = [["distance", 3,"brute"],
+		knnConf = [
+
+				   ["distance", 2,"brute"],			
+				   ["distance", 3,"brute"],
+				   ["distance", 4,"brute"],
 				   ["distance", 5,"brute"],
 				   ["distance", 6,"brute"],
 				   ["distance", 7,"brute"],
 				   ["distance", 9,"brute"],
 				   ["distance", 11,"brute"],
 
+				   ["uniform", 2,"brute"],			
 				   ["uniform", 3,"brute"],
+				   ["uniform", 4,"brute"],
 				   ["uniform", 5,"brute"],
 				   ["uniform", 6,"brute"],
 				   ["uniform", 7,"brute"],
@@ -99,10 +132,10 @@ class Prototipo:
 					#["sag","none"],
 					#["sag","l2"],
 
-					["saga","none"],
-					["saga","l1"],
-					["saga","l2"],
-					["saga","elasticnet"],
+					#["saga","none"],
+					#["saga","l1"],
+					#["saga","l2"],
+					#["saga","elasticnet"],
 
 					["liblinear","l1"],
 					["liblinear","l2"],
@@ -111,30 +144,13 @@ class Prototipo:
 		bestKNN = [[],0," "]
 		bestNV = [[],0," "]
 		bestLogReg = [[],0," "]
-		self.vectores =  Utils.loadObject("./Recursos/ModeloVectorial.json")
-		for k in range(1):
-
+		for k in range(2):
 			if (k == 0):
 				print("Pruebas con TFIDF")
 			else:
 				print("Pruebas con TF")
 				self.vectores.setTF()
-
-			m = []
-			r = []
-			e = []
-			for i in range(len(self.vectores.vectors)):
-				if (self.vectores.etiquetas[i] == 1):
-					m.append(self.vectores.vectors[i])
-				elif (self.vectores.etiquetas[i] == 2):
-					r.append(self.vectores.vectors[i])
-				elif (self.vectores.etiquetas[i] == 3):
-					e.append(self.vectores.vectors[i])
-			X = []
-			X = m + r + e
-			X_train, X_test, y_train, y_test = train_test_split(X, 
-				[0]*len(m)	 + [1]*len(r) + [2]*len(e), test_size=0.3, random_state= 0)
-			
+				X_train = self.vectores.vectors
 
 			print("KNN")
 			for c in knnConf:
@@ -154,7 +170,7 @@ class Prototipo:
 				self.logreg.configModelo(c[0],c[1])
 				cv = cross_val_score(self.logreg.model, X_train, y_train, cv=5)
 				print("Precision promedio",cv.mean())
-				if cv.mean() > bestKNN[1]:
+				if cv.mean() > bestLogReg[1]:
 					tv = "tf"
 					if k == 1:
 						tv = "tf-idf"
@@ -168,7 +184,7 @@ class Prototipo:
 				print("Precision promedio",cv.mean())
 				if cv.mean() > bestNV[1]:
 					tv = "tf"
-					if k == 1:
+					if k == 0:
 						tv = "tf-idf"
 					bestNV = [c,cv.mean(),tv]
 		
@@ -193,31 +209,61 @@ class Prototipo:
 		knnConf = configs[0]
 		nvConf = configs[1]
 		lrConf = configs[2]
+
+
+		vocabulary = Utils.loadObject("./Recursos/vocabulary.json")
+		mvTest = ModeloVectorial()
+		mvTest.setVocabulary(vocabulary)
+		m,r,e = self.separarConjuntos()
+		y_test = []
+		y_train = []
+		X_train = self.vectores.vectors
+		for i in range(25,len(m)):
+			lemmas = Utils.loadObject("./Recursos/lemmas/"+str(m[i])+".json")
+			mvTest.addVector(lemmas,1)
+			y_test.append(1)
+		for i in range(25,len(r)):	
+			lemmas = Utils.loadObject("./Recursos/lemmas/"+str(r[i])+".json")
+			mvTest.addVector(lemmas,2)
+			y_test.append(2)
+		for i in range(25,len(e)):	
+			lemmas = Utils.loadObject("./Recursos/lemmas/"+str(e[i])+".json")
+			mvTest.addVector(lemmas,3)
+			y_test.append(3)
+
 		self.vectores =  Utils.loadObject("./Recursos/ModeloVectorial.json")
-		m = []
-		r = []
-		e = []
-		for i in range(len(self.vectores.vectors)):
-			if (self.vectores.etiquetas[i] == 1):
-				m.append(self.vectores.vectors[i])
-			elif (self.vectores.etiquetas[i] == 2):
-				r.append(self.vectores.vectors[i])
-			elif (self.vectores.etiquetas[i] == 3):
-				e.append(self.vectores.vectors[i])
-		X = []
-		X = m + r + e
-		X_train, X_test, y_train, y_test = train_test_split(X, 
-				[0]*len(m)	 + [1]*len(r) + [2]*len(e), test_size=0.3, random_state= 0)
+		X_train = self.vectores.vectors
+		y_train = []
+		for v in range(len(X_train)):
+			y_train.append(self.vectores.etiquetas[v])
 		print("Datos para entrenamiento")
-		print("Libros malos:",y_train.count(0))
-		print("Libros regulares:",y_train.count(1))
-		print("Libros buenos:",y_train.count(2))	
+		print("Libros malos:",y_train.count(1))
+		print("Libros regulares:",y_train.count(2))
+		print("Libros buenos:",y_train.count(3))	
 		self.knn.setTrainData(X_train,y_train)
 		self.nv.setTrainData(X_train,y_train)
 		self.logreg.setTrainData(X_train,y_train)
 
+		if (configs[0][-1] == 'tf'):
+			mvTest.setTF()
+		elif (configs[0][-1] == 'tf-idf'):
+			mvTest.setTFIDF()
+		X_test = mvTest.vectors
+
 		self.knn.setTestData(X_test,y_test)
+		if (configs[1][-1] == 'tf'):
+			mvTest.setTF()
+		elif (configs[1][-1] == 'tf-idf'):
+			mvTest.setTFIDF()
+		X_test = mvTest.vectors
+		
 		self.nv.setTestData(X_test,y_test)
+		if (configs[2][-1] == 'tf'):
+			mvTest.setTF()
+		elif (configs[2][-1] == 'tf-idf'):
+			mvTest.setTFIDF()
+		X_test = mvTest.vectors
+		
 		self.logreg.setTestData(X_test,y_test)
 
 		#X = m[:25] + r[:25] + e[:25]
@@ -241,17 +287,40 @@ class Prototipo:
 		self.knn = Utils.loadObject("./Recursos/KNN.json")
 		self.nv = Utils.loadObject("./Recursos/NaiveBayes.json")
 		self.logreg = Utils.loadObject("./Recursos/LogReg.json")
-
-		print(len(self.nv.trainLabels))
+		print("Datos de prueba")
+		print("Libros malos:",self.nv.testLabels.count(1))
+		print("Libros regulares:",self.nv.testLabels.count(2))
+		print("Libros excelentes:",self.nv.testLabels.count(3))
 		print("KNN")
 		self.knn.probar()
-		print("Precision",self.knn.precision())
+		m = self.knn.metricas()
+		print("Precision:",m[0])
+		print("Recall(Exhaustividad):",m[1])
+		print("Exactitud:",m[2])
+		print("Especifidad:",m[3])
+		print("F1:",m[4])
+		print("-----------------------------------------------------")
+
 		print("Naive Bayes")
 		self.nv.probar()
-		print("Precision",self.nv.precision())
+		m = self.nv.metricas()
+		print("Precision:",m[0])
+		print("Recall(Exhaustividad):",m[1])
+		print("Exactitud:",m[2])
+		print("Especifidad:",m[3])
+		print("F1:",m[4])
+
+		print("-----------------------------------------------------")
+		
 		print("Regresion logistica")
 		self.logreg.probar()
-		print("Precision",self.logreg.precision())
+		m = self.logreg.metricas()
+		print("Precision:",m[0])
+		print("Recall(Exhaustividad):",m[1])
+		print("Exactitud:",m[2])
+		print("Especifidad:",m[3])
+		print("F1:",m[4])
+		print("-----------------------------------------------------")
 	
 	def predecirExterno(self,txt):
 		lemmas= []
@@ -289,11 +358,12 @@ class Prototipo:
 		pass
 import os
 prot = Prototipo()
-#prot.libros = Utils.getLibros("./Libros de Goodreads")
+prot.libros = Utils.getLibros("./Libros de Goodreads")
 
 #prot.procesarTextos()	
+#vc = Utils.loadObject("./Recursos/vocabulary.json")
+#print("tam",len(vc))
 prot.generarVectores()
-
 prot.seleccionarModelos()
 prot.entrenarModelos()
 prot.generarResumen()
