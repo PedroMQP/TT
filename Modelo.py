@@ -34,17 +34,21 @@ class Modelo:
 		cm = sklearn.metrics.confusion_matrix(self.testLabels,self.testResults,labels=[1,2,3])
 		print("Reales/Preds  Malos   Regulares  Excelentes")
 		print("Malos         ",cm[0][0],"      ",cm[0][1],"       ",cm[0][2],"   ")
-		print("Regualres     ",cm[1][0],"     ",cm[1][1],"       ",cm[1][2],"   ")
+		print("Regulares     ",cm[1][0],"     ",cm[1][1],"       ",cm[1][2],"   ")
 		print("Excelentes    ",cm[2][0],"     ",cm[2][1],"       ",cm[2][2],"   ")
 		precision = sklearn.metrics.precision_score(self.testLabels,self.testResults,average = None)
+		p1 = sklearn.metrics.precision_score(self.testLabels,self.testResults,average = 'macro')
+		p2 = sklearn.metrics.precision_score(self.testLabels,self.testResults,average = 'micro')
+		p3 = sklearn.metrics.precision_score(self.testLabels,self.testResults,average = 'weighted')
+
 		recall = sklearn.metrics.recall_score(self.testLabels,self.testResults,average = None)
 		accuaracy = sklearn.metrics.accuracy_score(self.testLabels,self.testResults)
 
-		specifity = [
-					(cm[1][1]+cm[2][2])/(cm[1][1]+cm[2][2] +cm[0][1]+cm[0][2] ),
-					(cm[0][0]+cm[2][2])/(cm[0][0]+cm[2][2] +cm[1][0]+cm[1][2] ),
-					(cm[1][1]+cm[0][0])/(cm[1][1]+cm[0][0] +cm[2][0]+cm[2][1] )
-	     			 ]
+		specifity = (
+					(cm[1][1]+cm[2][2])/(cm[1][1]+cm[2][2] +cm[1][0]+cm[2][0] )+
+					(cm[0][0]+cm[2][2])/(cm[0][0]+cm[2][2] +cm[0][1]+cm[2][1] )+
+					(cm[1][1]+cm[0][0])/(cm[1][1]+cm[0][0] +cm[0][2]+cm[1][2] )
+	     			 )/3
 		f1 = sklearn.metrics.f1_score(self.testLabels,self.testResults,average = None)
 		return [precision,recall,accuaracy,specifity,f1]
 	

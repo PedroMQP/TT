@@ -40,7 +40,7 @@ class Prototipo:
 		maxLen = 999999# Maxima mongitud de caracteres soportados por libro
 		for lib in self.libros:
 			lemmas = []
-			if not( str(lib.num)+".json" in os.listdir("./Recursos/lemmas/")):	
+			if not(0):	
 				booktam = len(lib.texto)
 				txt = self.prepro.deleteSpecialChars(lib.texto)
 				if (booktam < maxLen):#1000000 es el numero maximo de caracteres soportada por cada procesamiento
@@ -67,7 +67,7 @@ class Prototipo:
 	def generarVectores(self):
 		m,r,e = self.separarConjuntos()
 		vocabulary = set()
-		for i in range(25):
+		for i in range(28):
 			lemmas = Utils.loadObject("./Recursos/lemmas/"+str(m[i])+".json")
 			vocabulary = vocabulary | set(lemmas)
 			lemmas = Utils.loadObject("./Recursos/lemmas/"+str(r[i])+".json")
@@ -77,7 +77,7 @@ class Prototipo:
 		print("Vocabulario de tamaño",len(vocabulary))
 		self.vectores.setVocabulary(vocabulary)
 		Utils.saveObject(vocabulary,"./Recursos/vocabulary.json") 
-		for i in range(25):
+		for i in range(28):
 			lemmas = Utils.loadObject("./Recursos/lemmas/"+str(m[i])+".json")
 			self.vectores.addVector(lemmas,1)
 			lemmas = Utils.loadObject("./Recursos/lemmas/"+str(r[i])+".json")
@@ -107,8 +107,11 @@ class Prototipo:
 				   ["distance", 5,"brute"],
 				   ["distance", 6,"brute"],
 				   ["distance", 7,"brute"],
+				   ["distance", 8,"brute"],
 				   ["distance", 9,"brute"],
 				   ["distance", 11,"brute"],
+				   ["distance", 15,"brute"],
+				   ["distance", 20,"brute"],
 
 				   ["uniform", 2,"brute"],			
 				   ["uniform", 3,"brute"],
@@ -116,10 +119,13 @@ class Prototipo:
 				   ["uniform", 5,"brute"],
 				   ["uniform", 6,"brute"],
 				   ["uniform", 7,"brute"],
+				   ["uniform", 8,"brute"],
 				   ["uniform", 9,"brute"],
-				   ["uniform", 11,"brute"]			
+				   ["uniform", 11,"brute"],
+				   ["uniform", 15,"brute"],
+				   ["uniform", 20,"brute"]			
 		]
-		nvConf = [0.05,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.99]
+		nvConf = [0,0.05,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.95,1]
 		#‘l1’, ‘l2’, ‘elasticnet’, ‘none',{‘newton-cg’, ‘lbfgs’, ‘liblinear’, ‘sag’, ‘saga’
 					#penalty   solver 
 		reglConf = [
@@ -183,9 +189,9 @@ class Prototipo:
 				cv = cross_val_score(self.nv.model, X_train, y_train, cv=5)
 				print("Precision promedio",cv.mean())
 				if cv.mean() > bestNV[1]:
-					tv = "tf"
+					tv = "tf-idf"
 					if k == 0:
-						tv = "tf-idf"
+						tv = "tf"
 					bestNV = [c,cv.mean(),tv]
 		
 		print("Los mejores parametros para KNN son:",bestKNN[0])
@@ -218,15 +224,15 @@ class Prototipo:
 		y_test = []
 		y_train = []
 		X_train = self.vectores.vectors
-		for i in range(25,len(m)):
+		for i in range(28,len(m)):
 			lemmas = Utils.loadObject("./Recursos/lemmas/"+str(m[i])+".json")
 			mvTest.addVector(lemmas,1)
 			y_test.append(1)
-		for i in range(25,len(r)):	
+		for i in range(28,len(r)):	
 			lemmas = Utils.loadObject("./Recursos/lemmas/"+str(r[i])+".json")
 			mvTest.addVector(lemmas,2)
 			y_test.append(2)
-		for i in range(25,len(e)):	
+		for i in range(28,len(e)):	
 			lemmas = Utils.loadObject("./Recursos/lemmas/"+str(e[i])+".json")
 			mvTest.addVector(lemmas,3)
 			y_test.append(3)
@@ -359,13 +365,13 @@ class Prototipo:
 import os
 prot = Prototipo()
 prot.libros = Utils.getLibros("./Libros de Goodreads")
-
+print("Libros",len(prot.libros))
 #prot.procesarTextos()	
 #vc = Utils.loadObject("./Recursos/vocabulary.json")
 #print("tam",len(vc))
-prot.generarVectores()
-prot.seleccionarModelos()
-prot.entrenarModelos()
+#prot.generarVectores()
+#prot.seleccionarModelos()
+#prot.entrenarModelos()
 prot.generarResumen()
 ext = Utils.getText("./Libros de Goodreads/1.txt")
 prot.predecirExterno(ext)

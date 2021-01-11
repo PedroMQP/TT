@@ -16,7 +16,7 @@ class Preprocesamiento:
 		expr = r'[^a-zA-Z]'
 		filtered = " " 
 		for token in text.split():
-			cadena = re.sub(expr, r'', token)
+			cadena = re.sub(expr, r' ', token)
 			if (len(cadena) > 0):
 				filtered =filtered +" "+ cadena.lower() 	
 		return filtered 
@@ -49,7 +49,10 @@ class Preprocesamiento:
 	def lemmatize_delSW(self):# Lemmatiza y quita las stopwords
 		lemmas = []
 		for tok in self.tokens:
-			if (not(tok.text in self.stopwords) or not(tok.lemma_ in self.stopwords)  ):
+			if (not(tok.text in self.stopwords) and tok.text != " " and not(tok.lemma_ in self.stopwords)):
 					lemmas.append(tok.lemma_)
 					#print(lemmas[-1],len(lemmas[-1]))
 		return lemmas
+pro = Preprocesamiento()
+pro.setText("hi  how are you")
+print(pro.lemmatize_delSW())

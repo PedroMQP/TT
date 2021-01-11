@@ -48,25 +48,23 @@ class Utils:
 		anterior = 600
 		actual = 0
 		dataset = pd.read_csv('Libros.csv')
-		lista = dataset.iloc[:,[1,3]].values
-		for lib in lista:
-			cont = 0
-			for i in range(1,156): #(f"Libros de Goodreads/{i}.txt")
-				fname = addr+f"/{i}.txt"
-
-				with open(fname, errors='ignore') as file: #open('Libros de Goodreads/'+str(i)+'.txt') as file:  #open(f'{'Libros de Goodreads/'}{i}{'.txt'}')
-					x = file.read()
-					actual = x.find(lib[0], 0, 500)
-					if(actual!=-1):
-						if( True):   
-							anterior = actual
-							contador+=1
-							nuevoLibro = Libro(lib[0], lib[1], x,i)
-							lst.append(nuevoLibro) 
-		return lst
-	def delExtraInfoPG(fname):#Elimina información extra de los libros del Projecto Gutenberg
+		lista = dataset.iloc[:,[0,3,1]].values
+		contador  = 0
+		lst = []
+		star = "*"
+		lstLibros = []
+		for i in range(1,156): 
+			for libro in lista:
+				with open(f"{addr}/{i}.txt", errors='ignore') as file: #open('Libros de Goodreads/'+str(i)+'.txt') as file:  #open(f'{'Libros de Goodreads/'}{i}{'.txt'}')
+					if i == libro[0]:
+						texto = file.read() #file.readlines() #
+						nuevoLibro = Libro( libro[2], libro[1], texto,int(libro[0]))
+						lstLibros.append(nuevoLibro)
+						contador+=1
+		return lstLibros
+	def delExtraInfoPG(self,fname):#Elimina información extra de los libros del Projecto Gutenberg
 		cad = ["*** END","***END"]# Cadenas que indica que el libro termino
-		txtL = Utils.getTextLines(fname)
+		txtL = UsualTools.getTextLines(fname)
 		txt= " "
 		nl = len(txtL)
 		ctxt = " "
